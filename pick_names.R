@@ -2,3 +2,8 @@ talk_names <- c("Koo", "Anna", "Song", "Sehrish", "Shazia", "Zeinab", "Adele", "
 
 set.seed(100)
 sample_speaker <- sample(x = talk_names, size = 6, replace = FALSE)
+
+
+# Sample winners
+talk_names <- c("Koo", "Anna", "Song", "Sehrish", "Shazia", "Adele", "Emi", "Alice", "Dianne")
+
