@@ -478,7 +478,7 @@ Both work but the second way is the recommended one, which will be described bel
 - Flexibility - change easily in response to different user and system requirements 
 
 
-# Pathwork - **[Shazia Ruybal](www.shaziaruybal.com)**
+# Patchwork - **[Shazia Ruybal](www.shaziaruybal.com)**
 
 ```{r}
 # install.packages(c("tidyverse", "patchwork, palmerpenguins", "devtools"))
@@ -514,14 +514,15 @@ plot_2 <- penguins %>%
 
 ```{r}
 plot_1 + plot_2 + # plot them side-by-side
-  plot_layout(guides = "collect") + # this "collects" the legends to the right of the plot
+  plot_layout(guides = "collect", width = 8) + # this "collects" the legends to the right of the plot
   plot_annotation(tag_levels = "a", tag_suffix = ")") # this adds panel labels
 ```
 
 
+
 ```{r}
 plot_1 / plot_2 + # plot them one over the other
-  plot_layout(guides = "collect") + # this "collects" the legends to the right of the plot
+  plot_layout(guides = "collect",  width = 8) + # this "collects" the legends to the right of the plot
   plot_annotation(tag_levels = "a", tag_suffix = ")") # this adds panel labels
 ```
 
