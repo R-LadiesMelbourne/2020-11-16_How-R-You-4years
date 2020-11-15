@@ -478,7 +478,7 @@ Both work but the second way is the recommended one, which will be described bel
 - Flexibility - change easily in response to different user and system requirements 
 
 
-# Pathwork - Shazia Rubental
+# Pathwork - Shazia Ruybal
 
 ```{r}
 # install.packages(c("tidyverse", "patchwork, palmerpenguins", "devtools"))

@@ -4,6 +4,7 @@ How R you? - R-Ladies Melbourne code and tips\!
 
 Organised by [Anna Quaglieri](https://github.com/annaquaglieri16),
 [Sehrish Kanwal](https://github.com/skanwal) and [Shazia
-Rubental](www.shaziaruybal.com).
+Ruybal](www.shaziaruybal.com).
 
-Go to [How R you - R-Ladies Melbourne Tips website]().
+Go to [How R you - R-Ladies Melbourne Tips
+website](https://upbeat-jang-94d491.netlify.app/).
