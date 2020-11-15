@@ -185,7 +185,7 @@ iris$Species %>% describe
 
 - **tidylog** reduces significant code verification and avoid many errors for me. It warns you when NA is generated due to situation not considered. 
 
-```{r}
+```{r message=TRUE}
 library(tidylog, warn.conflicts = FALSE, quietly = FALSE)
 
 new_dt <- iris %>% 
@@ -198,7 +198,7 @@ new_dt <- iris %>%
 - Compare with revised code: no new NA was generated after the mutation.
 
 
-```{r}
+```{r message=TRUE}
 library(tidylog, warn.conflicts = FALSE, quietly = FALSE)
 
 new_dt <- iris %>% 
