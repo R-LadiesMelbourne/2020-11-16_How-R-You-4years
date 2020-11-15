@@ -39,7 +39,7 @@ img <- readPNG("logo.png")
 grid.raster(img)
 ```
 
-# Using `purrr` for quick summary tables - St Koo
+# Using `purrr` for quick summary tables - **St Koo**
 
 
 Adapted from this fantasic [Learn to Purrr tutorial](http://www.rebeccabarter.com/blog/2019-08-19_purrr/)
@@ -80,7 +80,7 @@ summary_df %>%
 ```
 
 
-# Fitting several linear models by group with `purrr` - Anna Quaglieri
+# Fitting several linear models by group with `purrr` - **[Anna Quaglieri](https://github.com/annaquaglieri16)**
 
 For the example I am going to use the `flights` dataset from the R package `nycflights13`. I am going to fit linear model that tries to explain the `arr_time` as a function of `dep_time` and `arr_delay`.
 
@@ -122,7 +122,7 @@ expand_models$fit[1]
 ```
 
 
-# Column-wise operations with `mutate`, `across` and `case_when` - Anna Quaglieri
+# Column-wise operations with `mutate`, `across` and `case_when` - **[Anna Quaglieri](https://github.com/annaquaglieri16)**
 
 I found the method below really useful to recode the levels of one or several columns! 
 
@@ -155,7 +155,7 @@ test_data %>%
 Strongly suggest to have a look at other functions and applications to perform column-wise operations https://cran.r-project.org/web/packages/dplyr/vignettes/colwise.html.
 
 
-# Basic but Useful R Tips by Song
+# Useful R Tips by **[Song](https://www.linkedin.com/in/ytsong/)**
 
 ## Before we start
 
@@ -412,7 +412,7 @@ ggplotly({plt_plotly}, tooltip = "text")
 To be continue, I have coded many interactive plots in shinyapps, and some can be found from <https://coffeeandplot.com/apps/>. This is a relatively new website we created couples of month ago. Get in touch if you have any suggestions. Please find me @ <https://www.linkedin.com/in/ytsong/>.
 
 
-# Render an RMarkdown report - Sehrish Kanwal
+# Render an RMarkdown report - **[Sehrish Kanwal](https://github.com/skanwal)**
 
 This section describes how to render an RMarkdown report within a simple R conda environment on a Command Line Interface (cluster or linux environment). This could be achieved in two possible ways:
 
@@ -478,7 +478,7 @@ Both work but the second way is the recommended one, which will be described bel
 - Flexibility - change easily in response to different user and system requirements 
 
 
-# Pathwork - Shazia Ruybal
+# Pathwork - **[Shazia Ruybal](www.shaziaruybal.com)**
 
 ```{r}
 # install.packages(c("tidyverse", "patchwork, palmerpenguins", "devtools"))
@@ -526,7 +526,7 @@ plot_1 / plot_2 + # plot them one over the other
 ```
 
 
-# How to Generate Word Clouds in R (The simplest way) - Zeinab Manzari
+# How to Generate Word Clouds in R (The simplest way) - **[Zeinab Manzari](https://github.com/XYZeinab)**
 
 ```{r}
 # install.packages(c("wordcloud","RColorBrewer))
@@ -549,7 +549,7 @@ wordcloud(words = words,freqs = freqs, scale=c(4,.4), max.words = 1000, random.o
 ```
 
 
-# Insert a time-stamp in RStudio - Adele Barughase
+# Insert a time-stamp in RStudio - **[Adele Barughare](https://github.com/aabarug)**
 
 In a code chunk or in an R script, insert a timestamp with `ts` + `shift` + `tab`.
 
@@ -565,6 +565,291 @@ Then press `shift` + `tab`:
 # Wed Nov 11 10:42:54 2020 ------------------------------
 
 ```
+
+# Making comparisons by groups? - **[Emi Tanaka](https://github.com/emitanaka)**
+
+* Check it out with a plot! 
+* Make multiples/facets if there's too many observations per group!
+* Easily done with `ggplot2`!
+
+```{r no-shadow}
+ggplot(ChickWeight, aes(Time, weight, group = Chick)) +
+  geom_line(aes(color = Diet)) +
+  facet_wrap(~Diet) +
+  theme_bw() +
+  labs(y = "Weight") +
+  scale_color_viridis_d()
+```
+
+* But make it even easier to compare by **adding a shadow of all data for each facet**.
+* Only takes one extra line in `ggplot2`. Replace data with the variable you are facetting with dropped and change color to gray like in the second line of code below. 
+
+```{r with-shadow}
+ggplot(ChickWeight, aes(Time, weight, group = Chick)) +
+  geom_line(data = select(ChickWeight, -Diet), color = "gray") + 
+  geom_line(aes(color = Diet)) +
+  facet_wrap(~Diet) +
+  theme_bw() +
+  labs(y = "Weight") +
+  scale_color_viridis_d()
+
+```
+
+# R Tips for (Sport and Non-Sport) Scientists and/ or those who simply love using R! - **[Alice Sweeting](http://sportstatisticsrsweet.rbind.io/)**
+
+```{r global_options, R.options=knitr::opts_chunk$set(warning=FALSE, message=FALSE)}
+```
+
+
+Below are some tips and tricks that I have picked up along my R journey, that may (or may not!) be useful for those working with sport science data, or any data, in R. I hope you find the tips useful!
+
+
+![](https://media.giphy.com/media/TEdAFYzzDEq1vNi2Qf/source.gif)
+
+
+
+<br>
+
+## Visualising Netball Data
+
+If you are interested in working with some real life netball data, you can see a slidedeck that I put together of how to import, tidy and analyse the data [here.](https://sportstatisticsrsweet.github.io/RNetball/Slides)
+
+## Working with Files from Drobpbox
+
+Sometimes, someone will share some data with us via Dropbox. Often these files can be **really** big and it is annoying to download a local copy of these files on your machine. If you have been sent a link to view these files, the following may be useful so you can load them directly into R, without having to save the file locally on your machine first.
+
+1. Get "Share (or Copy) Dropbox Link" from file.
+  This might look like: https://www.dropbox.com/s/sometexthere/NameOfFile.csv?dl=0
+2. Change dl=0 to dl=1 at end of link.
+  This might look like: https://www.dropbox.com/s/sometexthere/NameOfFile.csv?dl=1
+3. Run the following code
+```{r eval=FALSE}
+# Install the {vroom} package
+install.packages(vroom)
+# Load the package from your library
+library(vroom)
+# Load your data directly into R!
+data <- vroom("https://www.dropbox.com/s/sometexthere/NameOfFile.csv?dl=1")
+```
+
+## Quickly importing Athlete Management System (AMS) Data into R
+
+Use R to quickly import AMS your data and not even open a web browser! To do this, please follow the steps below. Note – I am using Smartabase as an example here because it is familiar to me. 
+
+1. Save a report of your data within Smartabase. For example, save a report that contains all historical athlete wellness data.
+2. Open R and use the code below to import your data. Note, you will need to add your own username/ password/ URL details that are specific to your team.
+
+```{r eval=FALSE}
+# Load required packages
+library(rvest)
+library(plyr)
+library(dplyr)
+library(qdap)
+# Connect to a report that you have generated via Smartabase
+WellnessDataURL <- html_session("https://username:password@my2.smartabase.com/yourteamsname/live?report=WellnessData&updategroup=true")
+# Read in data
+WellnessData <- read_html(WellnessDataURL)
+# Identify the table
+WellnessDataTable <- html_nodes(WellnessData, "table")
+# Collect only table data
+WellnessDataTable1 <- html_table(WellnessDataTable[1], fill = TRUE)
+# Make data.frame
+HistoricalWellnessData <- as.data.frame(WellnessDataTable1)
+# Clean Environment
+rm(list = grep("^HistoricalWellnessData", ls(), value = TRUE, invert = TRUE))
+```
+
+Now your AMS data is in a neat data.frame and ready for any further statistical analysis or visualisation using R, without needing to open a web browser!
+
+<br>
+
+![
+
+# Making a cartogram of the 2020 Victorian COVID-19 outbreak - **[Dianne Cook](http://dicook.org)**
+
+```{r libraries, echo=FALSE}
+library(tidyverse)
+library(lubridate)
+library(forcats)
+library(ozmaps)
+library(sf)
+library(cartogram)
+library(ggthemes)
+library(plotly)
+library(sugarbag)
+```
+
+In Melbourne we have been in a strict lockdown since July. Each week we get our hopes up that restrictions might be eased, and once again these hopes are dashed by the announcement Sunday Oct 25, keeping the restrictions a little longer because of another outbreak in the northwest of the city. The data we have collected here are the case counts by Victorian local government area (LGA) since the beginning of July. We will examine the spatiotemporal distribution of these counts. 
+
+Working with spatial data is always painful! It almost always requires some **ugly** code. Part of the reason for the difficulty is the use of special data objects, that describe maps. There are several different choices, and some packages and tools use one, and others use another, so not all tools work together. The `sf` package is a recent endeavour that helps enormously, but some tools still use other forms, and when you run into errors this might be the reason - it can be hard to tell. Another reason is that map objects can be very large, which makes sense for accurate mapping, but for data analysis and visualisation, we'd rather have smaller, even if slightly inaccurate, spatial objects. It can be helpful to thin out map data before doing further analysis - you need special tools for this, eg `mapshapr`. We don't need this for the exercises here. Another problem commonly encountered is that there are numerous coordinate systems, and types of projections of the 3D globe into a 2D canvas. We have become accustomed to lat/long but like time its an awkward scale to compute on because a translation from E/W and N/S to positive and negative values is needed. More commonly a Universal Transverse Mercator (UTM) is the standard but its far less intuitive to use.  
+
+The code for all the analysis is provided for you. We recommend that you run the code in steps to see what it is doing, why the mutating and text manipulations are necessary. Talk about the code with each other to help you understand it. 
+
+
+## Getting the data
+
+### COVID-19 counts
+
+COVID-19 data by LGA is available from https://www.covid19data.com.au/victoria. You should find that some variables are type `chr` because "null" has been used to code entries on some days. This needs fixing, and also missings should be converted to 0, with the rationale being that if the value is missing it most likely means there were no cases.
+
+
+```{r}
+# Read the data
+# Replace null with 0, for three LGAs
+# Convert to long form to join with polygons
+# Make the date variables a proper date
+# Set NAs to 0, this is a reasonable assumption
+covid <- read_csv("https://raw.githubusercontent.com/numbats/eda/master/data/melb_lga_covid.csv") %>%
+  mutate(Buloke = as.numeric(ifelse(Buloke == "null", "0", Buloke))) %>%
+  mutate(Hindmarsh = as.numeric(ifelse(Hindmarsh == "null", "0", Hindmarsh))) %>%
+   mutate(Towong = as.numeric(ifelse(Towong == "null", "0", Towong))) %>%
+  pivot_longer(cols = Alpine:Yarriambiack, names_to="NAME", values_to="cases") %>%
+  mutate(Date = ydm(paste0("2020/",Date))) %>%
+  mutate(cases=replace_na(cases, 0))
+
+# Case counts are cumulative, so take lags to get daily case counts
+covid <- covid %>%
+  group_by(NAME) %>%
+  mutate(new_cases = cases - dplyr::lag(cases))
+
+# Filter to final day, which is cumulative count
+covid_cumul <- covid %>% 
+  filter(Date == max(Date)) 
+```
+
+### Spatial polygons
+
+Now let's get polygon data of Victorian LGAs from the `ozmaps` package. We need to fix some names of LGAs because there are duplicated LGA names, and there is one mismatch in names from the COVID data and the ozmaps data (Colac Otway). If the COVID data had been provided with a unique LGA code it would have helped in merging with the polygon data.
+
+```{r vic_lga}
+# Read the LGA data from ozmaps package. 
+# This has LGAs for all of Australia. 
+# Need to filter out Victoria LGAs, avoiding LGAs 
+# from other states with same name, and make the names
+# match covid data names. The regex equation is
+# removing () state and LGA type text strings
+# Good reference: https://r-spatial.github.io/sf/articles/sf1.html
+data("abs_lga")
+vic_lga <- abs_lga %>%
+  mutate(NAME = ifelse(NAME == "Latrobe (M) (Tas.)", "LatrobeM", NAME)) %>%
+  mutate(NAME = ifelse(NAME == "Kingston (DC) (SA)", "KingstonSA", NAME)) %>%
+  mutate(NAME = ifelse(NAME == "Bayside (A)", "BaysideA", NAME)) %>% 
+  mutate(NAME = str_replace(NAME, " \\(.+\\)", "")) %>%
+  mutate(NAME = ifelse(NAME == "Colac-Otway", "Colac Otway", NAME)) 
+vic_lga <- st_transform(vic_lga, 3395) 
+# 3395 is EPSG CRS, equiv to WGS84 mercator, 
+# see https://spatialreference.org/ref/epsg/?page=28
+# cartogram() needs this to be set
+```
+
+### Choropleth map
+
+A choropleth map is made from filling the colour of polygons. 
+
+```{r covid-choropleth, fig.width=10, fig.height=10, out.width="100%"}
+# Join covid data to polygon data, remove LGAs with 
+# missing values which should leave just Vic LGAs
+vic_lga_covid <- vic_lga %>%
+  left_join(covid_cumul, by="NAME") %>%
+  filter(!is.na(cases))
+
+# Make choropleth map, with appropriate colour palette
+choropleth <- ggplot(vic_lga_covid) + 
+  geom_sf(aes(fill = cases, label=NAME), colour="white") + 
+  scale_fill_distiller("Cases", palette = "YlOrRd",
+                       direction=1) + 
+  theme_map() +
+  theme(legend.position="bottom")
+choropleth
+#ggplotly(choropleth) # Interactive map
+```
+
+## Population-transformed cartogram
+
+### Get population data
+
+ The file [`VIF2019_Population_Service_Ages_LGA_2036.xlsx`](https://github.com/numbats/eda/blob/master/data/VIF2019_Population_Service_Ages_LGA_2036.xlsx)  has been extracted from the [Vic Gov web site](https://www.planning.vic.gov.au/land-use-and-population-research/victoria-in-future/tab-pages/victoria-in-future-data-tables). It is a complicated `xlsx` file, with the data in sheet 3, and starting 13 rows down. The `readxl` package is handy here to extract the population data needed. The code below has extracted only the data needed.
+ 
+```{r population}
+pop <- tibble(NAME = c("Alpine","Ararat","Ballarat","Banyule","Bass Coast","Baw Baw","Bayside","Benalla","Boroondara","Brimbank","Buloke","Campaspe","Cardinia","Casey","Central Goldfields","Colac Otway","Corangamite","Darebin","East Gippsland","Frankston","Gannawarra","Glen Eira","Glenelg","Golden Plains","Greater Bendigo","Greater Dandenong","Greater Geelong","Greater Shepparton","Hepburn","Hindmarsh","Hobsons Bay","Horsham","Hume","Indigo","Kingston","Knox","Latrobe","Loddon","Macedon Ranges","Manningham","Mansfield","Maribyrnong","Maroondah","Melbourne","Melton","Mildura","Mitchell","Moira","Monash","Moonee Valley","Moorabool","Moreland","Mornington Peninsula","Mount Alexander","Moyne","Murrindindi","Nillumbik","Northern Grampians","Port Phillip","Pyrenees","Queenscliffe","South Gippsland","Southern Grampians","Stonnington","Strathbogie","Surf Coast","Swan Hill","Towong","Wangaratta","Warrnambool","Wellington","West Wimmera","Whitehorse","Whittlesea","Wodonga","Wyndham","Yarra","Yarra Ranges","Yarriambiack"), 
+pop = c(12578,11746.43,103500.3,127447,33464.85,49296.21,102912,13981.3,177276,204190,6284,37596.09,97572.66,312789,13085.32,21362.81,16241,155126,45598.55,139502,10567.15,148583,19758.61,22016,112270.9,160222,239529.9,65071.32,15526.87,5787.223,93445.04,19884.51,207038,16165.73,158937.6,160353.5,74622.36,7559.041,47479.75,122570.7,8674.158,86942,114799.3,146097.1,141422.1,54658,41794.85,29486,192625,122871.1,32668.76,172289.5,161528,19093.7,16738.47,14052.73,64174,11570.29,108627.2,7315.398,2927.166,29120.95,16122.74,111003,10357.01,30465.01,20895.86,6045.765,28592,34243.1,43531.44,3932.907,169641.6,207058,40100,227008,92898.52,155227.4,6742.772))
+
+vic_lga_covid <- vic_lga_covid %>%
+  left_join(pop, by="NAME") 
+
+# Compute additional statistics
+vic_lga_covid <- vic_lga_covid %>%
+  group_by(NAME) %>%
+  mutate(cases_per10k = max(cases/pop*10000, 0)) %>%
+  ungroup()
+```
+
+### Make the cartogram
+
+```{r vic-cartogram, fig.width=10, fig.height=10, out.width="100%"}
+vic_lga_covid_carto <- cartogram_cont(vic_lga_covid, "pop")
+# This st_cast() is necessary to get plotly to work
+vic_lga_covid_carto <- st_cast(vic_lga_covid_carto, "MULTIPOLYGON") 
+
+cartgram <- ggplot(vic_lga_covid_carto) + 
+  geom_sf(aes(fill = cases_per10k, label=NAME), colour="white") + 
+  scale_fill_distiller("Cases", palette = "YlOrRd",
+                       direction=1) + 
+  theme_map() +
+  theme(legend.position="bottom") 
+cartgram 
+#ggplotly(cartgram) # Interactive cartogram
+```
+
+## Lastly, a hexagon tile map
+
+The hexagon tile map makes tiled hexagons representing the LGAs. You can read more about it in the documentation for the `sugarbag` package at https://srkobakian.github.io/sugarbag/.
+
+```{r hextile, fig.width=10, fig.height=10, out.width="100%"}
+# Spatial coordinates need to be in long/lat
+vlc_latlong <- st_transform(vic_lga_covid, crs = "+proj=longlat +datum=WGS84")
+
+# Placement of hexmaps depends on position relative to
+# Melbourne central
+data(capital_cities)
+vic_lga_hexmap <- create_hexmap(
+  shp = vlc_latlong,
+  sf_id = "NAME",
+  focal_points = capital_cities, verbose = TRUE)
+# This shows the centroids of the hexagons
+# ggplot(vic_lga_hexmap, aes(x=hex_long, y=hex_lat)) +
+#  geom_point()
+
+# Hexagons are made with the `fortify_hexagon` function
+vic_lga_covid_hexmap <- vic_lga_hexmap %>%
+  fortify_hexagon(sf_id = "NAME", hex_size = 0.1869) %>%
+  left_join(covid_cumul, by="NAME") %>%
+  filter(!is.na(cases)) %>%
+  left_join(pop, by="NAME") %>%
+  group_by(NAME) %>%
+  mutate(cases_per10k = max(cases/pop*10000, 0)) %>%
+  ungroup()
+
+hexmap <- ggplot() +
+  geom_sf(data=vlc_latlong, 
+          fill = "grey90", colour = "white", size=0.1) +
+  geom_polygon(data=vic_lga_covid_hexmap, 
+               aes(x=long, y=lat, group=hex_id, 
+                   fill = cases_per10k, 
+                   colour = cases_per10k, 
+                   label=NAME), 
+               size=0.2) +
+  scale_fill_distiller("Cases", palette = "YlOrRd",
+                       direction=1) +
+  scale_colour_distiller("Cases", palette = "YlOrRd",
+                       direction=1) +
+  theme_map() +
+  theme(legend.position="bottom", aspect.ratio=0.7)
+hexmap
+# ggplotly(hexmap)
+```
+
+
 
 
 

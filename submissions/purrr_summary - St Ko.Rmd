@@ -1,0 +1,42 @@
+---
+title: "Using purrr for quick summary tables"
+output: html_document
+---
+
+Adapted from this fantasic [Learn to Purrr tutorial](http://www.rebeccabarter.com/blog/2019-08-19_purrr/)
+
+```{r}
+# Load example data
+data("mtcars")
+
+head(mtcars)
+```
+
+You can use `purrr` to loop over all the columns, and output the info into a dataframe.
+
+In this example, I want to see variable type, max character length, and missingness.
+```{r, message = FALSE}
+library(tidyverse) # Includes purrr
+
+# Create dataframe with some summary info
+summary_df <- mtcars %>%
+  purrr::map_df(
+    ~data.frame(
+      class = class(.x),
+      max_char = max(nchar(.x, keepNA = FALSE)),
+      missing = sum(is.na(.x))
+    ), .id ="col_name"
+  )
+
+summary_df
+```
+
+And because it's a dataframe, you can use a package like `kableExtra` to format it for reports.
+```{r, message = FALSE}
+library(kableExtra)
+
+summary_df %>%
+  kableExtra::kbl() %>%
+  kableExtra::kable_styling()
+```
+

@@ -1,0 +1,71 @@
+---
+title: "R Tips for (Sport and Non-Sport) Scientists and/ or those who simply love using R!"
+author: "Alice Sweeting, PhD | Alice.Sweeting@vu.edu.au"
+date: "15/11/2020"
+output: html_document
+---
+
+```{r global_options, R.options=knitr::opts_chunk$set(warning=FALSE, message=FALSE)}
+```
+
+
+Below are some tips and tricks that I have picked up along my R journey, that may (or may not!) be useful for those working with sport science data, or any data, in R. I hope you find the tips useful!
+
+
+![](https://media.giphy.com/media/TEdAFYzzDEq1vNi2Qf/source.gif)
+<br>
+
+## Visualising Netball Data
+
+If you are interested in working with some real life netball data, you can see a slidedeck that I put together of how to import, tidy and analyse the data [here.](https://sportstatisticsrsweet.github.io/RNetball/Slides)
+
+## Working with Files from Drobpbox
+
+Sometimes, someone will share some data with us via Dropbox. Often these files can be **really** big and it is annoying to download a local copy of these files on your machine. If you have been sent a link to view these files, the following may be useful so you can load them directly into R, without having to save the file locally on your machine first.
+
+1. Get "Share (or Copy) Dropbox Link" from file.
+  This might look like: https://www.dropbox.com/s/sometexthere/NameOfFile.csv?dl=0
+2. Change dl=0 to dl=1 at end of link.
+  This might look like: https://www.dropbox.com/s/sometexthere/NameOfFile.csv?dl=1
+3. Run the following code
+```{r eval=FALSE}
+# Install the {vroom} package
+install.packages(vroom)
+# Load the package from your library
+library(vroom)
+# Load your data directly into R!
+data <- vroom("https://www.dropbox.com/s/sometexthere/NameOfFile.csv?dl=1")
+```
+
+## Quickly importing Athlete Management System (AMS) Data into R
+
+Use R to quickly import AMS your data and not even open a web browser! To do this, please follow the steps below. Note – I am using Smartabase as an example here because it is familiar to me. 
+
+1. Save a report of your data within Smartabase. For example, save a report that contains all historical athlete wellness data.
+2. Open R and use the code below to import your data. Note, you will need to add your own username/ password/ URL details that are specific to your team.
+
+```{r eval=FALSE}
+# Load required packages
+library(rvest)
+library(plyr)
+library(dplyr)
+library(qdap)
+# Connect to a report that you have generated via Smartabase
+WellnessDataURL <- html_session("https://username:password@my2.smartabase.com/yourteamsname/live?report=WellnessData&updategroup=true")
+# Read in data
+WellnessData <- read_html(WellnessDataURL)
+# Identify the table
+WellnessDataTable <- html_nodes(WellnessData, "table")
+# Collect only table data
+WellnessDataTable1 <- html_table(WellnessDataTable[1], fill = TRUE)
+# Make data.frame
+HistoricalWellnessData <- as.data.frame(WellnessDataTable1)
+# Clean Environment
+rm(list = grep("^HistoricalWellnessData", ls(), value = TRUE, invert = TRUE))
+```
+
+Now your AMS data is in a neat data.frame and ready for any further statistical analysis or visualisation using R, without needing to open a web browser!
+
+<br>
+
+![](https://media.giphy.com/media/UVpyI4w4wtrn2pRkkf/giphy.gif)

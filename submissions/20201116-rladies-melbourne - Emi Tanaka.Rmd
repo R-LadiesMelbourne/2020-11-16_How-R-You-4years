@@ -1,0 +1,41 @@
+---
+title: "R-Ladies Melbourne 4th Anniversary"
+author: "Emi Tanaka"
+date: "15/11/2020"
+output: html_document
+---
+
+
+```{r setup, message = FALSE, warning = FALSE}
+library(tidyverse) # for dplyr and ggplot2
+```
+
+## Making comparisons by groups?
+
+* Check it out with a plot! 
+* Make multiples/facets if there's too many observations per group!
+* Easily done with `ggplot2`!
+
+```{r no-shadow}
+ggplot(ChickWeight, aes(Time, weight, group = Chick)) +
+  geom_line(aes(color = Diet)) +
+  facet_wrap(~Diet) +
+  theme_bw() +
+  labs(y = "Weight") +
+  scale_color_viridis_d()
+```
+
+* But make it even easier to compare by **adding a shadow of all data for each facet**.
+* Only takes one extra line in `ggplot2`. Replace data with the variable you are facetting with dropped and change color to gray like in the second line of code below. 
+
+```{r with-shadow}
+ggplot(ChickWeight, aes(Time, weight, group = Chick)) +
+  geom_line(data = select(ChickWeight, -Diet), color = "gray") + 
+  geom_line(aes(color = Diet)) +
+  facet_wrap(~Diet) +
+  theme_bw() +
+  labs(y = "Weight") +
+  scale_color_viridis_d()
+
+```
+

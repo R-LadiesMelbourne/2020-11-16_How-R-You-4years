@@ -1,0 +1,263 @@
+---
+title: "Basic but Useful R Tips by Song"
+author: "Yutong Yuri Song"
+date: "12/11/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Before we start
+
+```{r}
+sessionInfo()
+```
+
+
+## Data Exploration
+
+I code in **tidyverse** universe plus **tidylog** to output all message corresponding to changes made to vector, dataframe, tibble, etc. Please find tidylog package @ <https://github.com/elbersb/tidylog>.
+
+- An initial step is often to preview a dataset. An alternative to summary is describe in **Hmisc** package. The benefits will be it counts number of NAs as summary does, but it also show a frequency table for factor/character.
+
+
+```{r, message=FALSE}
+library(tidyverse)
+
+# colnames(iris)
+# summary(iris)
+# str(iris)
+
+library(Hmisc)
+
+iris$Species %>% describe
+```
+
+- **tidylog** reduces significant code verification and avoid many errors for me. It warns you when NA is generated due to situation not considered. 
+
+```{r}
+library(tidylog, warn.conflicts = FALSE, quietly = FALSE)
+
+new_dt <- iris %>% 
+  filter(Sepal.Length >= 4.6) %>% 
+  mutate(new_name = case_when(
+    Species == "versicolor" ~ "V",
+    Species == "setosa" ~ "S"))
+```
+
+- Compare with revised code: no new NA was generated after the mutation.
+
+
+```{r}
+library(tidylog, warn.conflicts = FALSE, quietly = FALSE)
+
+new_dt <- iris %>% 
+  filter(Sepal.Length >= 4.6) %>% 
+  mutate(new_name = case_when(
+    Species == "versicolor" ~ "Versicolor",
+    Species == "setosa" ~ "Setosa",
+    TRUE ~ "Virginica"))
+```
+
+
+
+## Data Preparation
+
+Use iris dataframe as an example.
+
+- **relocate** also support **.after**, and combine use with **where**.
+
+```{r}
+dt <- head(iris,5)
+
+# dt %>% select("Species", everything(.))
+dt %>% relocate("Species", .before = "Sepal.Length")
+# dt %>% relocate(where(is.numeric), .after = where(is.factor))
+```
+
+- Similar concept can be applied to a vector through **SOfun** package. I found this useful when adjusting factor levels. Of course, **fct_reorder** and **fct_relevel** are useful in different situations.
+
+```{r}
+library(SOfun)
+v <- letters[1:7]
+v %>% moveMe(., "a last; b, e, g before d; c first; g after b")
+
+```
+
+
+- Another high frequency task is to manage NAs. This is way to spot hidden NAs.
+
+```{r}
+hidden_na_dt <- data.frame(
+  "student" = rep(c("A", "B", "C"),2),
+  "assignment" = rep(c("A1", "A2"),3),
+  "mark" = c(NA, runif(n = 5, min = 45, max = 100))
+) %>% 
+  filter(!is.na(mark))
+
+hidden_na_dt
+```
+
+- apply **complete** from **dplyr** package to fill 0 in missing mark from assignment 1 for student A. If there is more combinations, multiple items can be nesting in the **complete** argument.
+
+```{r}
+hidden_na_dt  %>% 
+  complete(student, nesting(assignment), fill = list(mark = 0))
+```
+
+## Data Visualisation
+
+I believe **ggplot2** / **plotly** is relative popular in practice. I also recommend **highercharter** to visualize timeseries data and/or **visNetwork** / **igraph** / **ggraph** to visualize networks. My focus today is labeling inside a chart, so that I will use **ggplot2** to demonstrate.
+
+- Randomly picked a few countries by max number of population of that country to show potential difference when treating labeling.
+
+```{r, message=FALSE}
+plt_original <- population %>% 
+  filter(country %in% c("India", "United States of America", "Viet Nam",
+                        "Lao People's Democratic Republic")) %>% 
+  ggplot(aes(x = year, y = population, group = country, color = country))+
+  geom_line()
+
+plt_original
+```
+
+
+### Functions that I used to improve numeric formatting
+
+The purpose of having customized functions is to improve readability and reduce cognitive load for digesting information provided by visualization.
+
+- The function I grabbed from stackoverflow and made two adaptations: (1) allow the function to accept negative inputs and (2) expand to recognize trillions. 
+
+```{r, message=FALSE, warning=FALSE}
+si_num <- function (x) {
+  
+  if (!is.na(x)) {
+    
+    if (x < 0){ 
+      sign <-  "-"
+      x <- abs(x)
+    }else{
+      sign <-  ""
+      x <- x
+    }
+    
+    if (x >= 1e12) { 
+      chrs <- strsplit(format(x, scientific=12), split="")[[1]];
+      len <- chrs[seq(1,length(chrs)-12)] %>% length();
+      rem <- chrs[seq(1,length(chrs)-11)];
+      rem <- append(rem, ".", after = len) %>% append("T");
+    }
+        
+    if (x >= 1e9) { 
+      chrs <- strsplit(format(x, scientific=12), split="")[[1]];
+      len <- chrs[seq(1,length(chrs)-9)] %>% length();
+      rem <- chrs[seq(1,length(chrs)-8)];
+      rem <- append(rem, ".", after = len) %>% append("B");
+    }
+    
+    
+    else if (x >= 1e6) { 
+      chrs <- strsplit(format(x, scientific=12), split="")[[1]];
+      len <- chrs[seq(1,length(chrs)-6)] %>% length();
+      rem <- chrs[seq(1,length(chrs)-5)]
+      rem <- append(rem, ".", after = len) %>% append("M");
+    }
+    
+    else if (x >= 1e3) { 
+      chrs <- strsplit(format(x, scientific=12), split="")[[1]];
+      len <- chrs[seq(1,length(chrs)-3)] %>% length();
+      rem <- chrs[seq(1,length(chrs)-2)];
+      rem <- append(rem, ".", after = len) %>% append("K");
+    }
+    
+    else {
+      return(x);
+    }
+    
+    return(str_c(sign, paste(rem, sep="", collapse=""), sep = ""));
+  }
+  else return(NA);
+} 
+
+si_vec <- function(x) {
+  sapply(x, FUN=si_num);
+}
+```
+
+
+- Modifications include: (1) change graph title and axis titles and format, (2) change a theme: minimalist design,  (3) remove legend and add text labels to each line.
+- Of course, there are more things: change color pallet defined for country, graph size,...
+
+```{r, fig.height=5, fig.width=10,  message=FALSE, warning=FALSE}
+library(hrbrthemes)
+library(scales)
+library(ggrepel)
+library(cowplot)
+
+
+year_series <- unique(population$year)
+reminder <- (max(year_series) - min(year_series)) %% 4
+new_breaks <- seq(from = min(year_series) + reminder, to = max(year_series), by = 4) 
+
+df <- population %>% 
+  filter(country %in% c("India", "United States of America", "Viet Nam",
+                        "Lao People's Democratic Republic")) 
+df_end <- df %>% 
+  group_by(country) %>% 
+  filter(year == max(year)) %>% 
+  ungroup()
+
+plt_adjust <- df %>% 
+  ggplot(aes(x = year, y = population, group = country, color = country))+
+  geom_line()+
+  geom_point()+
+  geom_text_repel(
+    data = df_end,
+    aes(label = str_wrap(country,25)),
+    nudge_x = 1,
+    direction = "y",## nudge vertically
+    size = 3,
+    hjust = 0, ### left aligned
+    segment.size = 0.3, ### from here is about the line to connect the data point and text
+    min.segment.length = 0,
+    segment.color = "grey60") + 
+  theme_ipsum() +
+  theme(legend.position = "none") +
+  scale_y_continuous(labels = si_vec)+
+  scale_x_continuous(breaks = new_breaks, limits = c(NA, 2020))+
+  labs(x = "Year", y = "Population", title = "Population Growth between 1995 and 2013")
+
+
+plt_original
+plt_adjust
+```
+
+- Or, put it into **plotly**, the default hover over message often does not satisfy users, more professional format is recommended to be used in hover over text.
+
+```{r, message=FALSE, warning=FALSE}
+library(plotly)
+
+plt_plotly <- df %>% 
+  mutate(text = str_c("Country: ", country, "\n",
+                      "Year: ", year, "\n",
+                      "Population: ", si_vec(population))) %>% 
+  ggplot(aes(x = year, y = population, group = country, color = country, text = text))+
+  geom_line()+
+  geom_point()+
+  theme_ipsum() +
+  theme(legend.position = "none") +
+  scale_y_continuous(labels = si_vec)+
+  scale_x_continuous(breaks = new_breaks)+
+  labs(x = "Year", y = "Population", title = "Population Growth between 1995 and 2013")
+
+
+
+ggplotly({plt_plotly}, tooltip = "text")
+```
+
+### At the end
+
+To be continue, I have coded many interactive plots in shinyapps, and some can be found from <https://coffeeandplot.com/apps/>. This is a relatively new website we created couples of month ago. Get in touch if you have any suggestions. Please find me @ <https://www.linkedin.com/in/ytsong/>.

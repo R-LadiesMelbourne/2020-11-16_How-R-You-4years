@@ -1,0 +1,22 @@
+---
+title: "Insert a time-stamp in RStudio"
+author: "Adele B"
+date: "11/11/2020"
+output: html_document
+---
+
+In a code chunk or in an R script, insert a timestamp with `ts` + `shift` + `tab`.
+
+First write `ts`:
+
+```{r}
+ts
+```
+
+Then press `shift` + `tab`:
+
+```{r}
+# Wed Nov 11 10:42:54 2020 ------------------------------
+
+```
+

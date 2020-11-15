@@ -1,0 +1,82 @@
+---
+title: "R tip"
+author: "Anna Quaglieri"
+date: "11/11/2020"
+output: html_document
+---
+
+
+# Column-wise operations with `mutate`, `across` and `case_when`
+
+I found the method below really useful to recode the levels of one or several columns! 
+
+```{r}
+library(dplyr)
+
+test_data <- data.frame(area = rep(c("North", "Sud", "East", "West"),times = c(2,3,4,1)),
+                        quality_before = c("High","Low",
+                                    "High","Low","Medium",
+                                    "Medium","Low","High","High",
+                                    "Low"),
+                        quality_after = c("High","High",
+                                    "High","Medium","Medium",
+                                    "Low","Low","High","High",
+                                    "Low"))
+
+test_data %>%
+  mutate(across(.cols = c(quality_before, quality_after),
+            ~ case_when(
+              . == "Low" ~ 0,
+              . == "Medium" ~ 1,
+              . == "High" ~ 2
+            )
+          )
+  )
+         
+```
+
+
+Strongly suggest to have a look at other functions and applications to perform column-wise operations https://cran.r-project.org/web/packages/dplyr/vignettes/colwise.html.
+
+
+# Fitting several linear models by group with `purrr` 
+
+For the example I am going to use the `flights` dataset from the R package `nycflights13`. I am going to fit linear model that tries to explain the `arr_time` as a function of `dep_time` and `arr_delay`.
+
+```{r}
+library(nycflights13)
+library(purrr)
+
+flights %>%
+  dplyr::select(arr_time, dep_time, arr_delay, carrier) %>%
+  head()
+```
+
+
+To fit the model to the whole dataset we would use the following code:
+
+```{r}
+summary(lm(arr_time ~ dep_time + arr_delay, data = flights))
+```
+
+What if we wanted to fit separate models by `carrier`?
+
+```{r}
+models <- flights %>%
+  dplyr::select(arr_time, dep_time, arr_delay, carrier) %>%
+  tidyr::nest(-carrier) %>%
+  dplyr::mutate(fit = purrr::map(data, ~ lm(arr_time ~ dep_time + arr_delay, data = .))) %>%
+  dplyr::mutate(results_fit = purrr::map(fit, function(f) confint(f))) 
+models
+```
+
+```{r}
+expand_models <- models %>%
+  tidyr::unnest(results_fit, .drop=TRUE) 
+expand_models
+```
+
+```{r fit-column}
+expand_models$fit[1]
+```
+
