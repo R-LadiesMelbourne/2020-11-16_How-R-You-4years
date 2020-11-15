@@ -1,0 +1,570 @@
+---
+title: "How R you? - R-Ladies Melbourne 4th anniversary!"
+date: "17/10/2018"
+output:
+  html_document:
+    includes:
+      after_body:
+      - header.html
+      - footer.html
+    theme: cosmo
+    toc: yes
+    toc_depth: 2
+  pdf_document:
+    toc: yes
+    toc_depth: '2'
+  github_document:
+    toc: yes
+    toc_depth: 2
+always_allow_html: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message=FALSE,
+                      warning=FALSE,
+                      fig.width = 5,
+                      fig.height = 5,
+                      fig.align = 'center')
+
+library(magick)
+library(png)
+library(grid)
+library(knitr)
+```
+
+
+```{r echo=FALSE,message=FALSE,fig.width=3,fig.height=3,fig.align='left',cache=FALSE}
+img <- readPNG("logo.png")
+grid.raster(img)
+```
+
+# Using `purrr` for quick summary tables - St Koo
+
+
+Adapted from this fantasic [Learn to Purrr tutorial](http://www.rebeccabarter.com/blog/2019-08-19_purrr/)
+
+```{r}
+# Load example data
+data("mtcars")
+
+head(mtcars)
+```
+
+You can use `purrr` to loop over all the columns, and output the info into a dataframe.
+
+In this example, I want to see variable type, max character length, and missingness.
+```{r, message = FALSE}
+library(tidyverse) # Includes purrr
+
+# Create dataframe with some summary info
+summary_df <- mtcars %>%
+  purrr::map_df(
+    ~data.frame(
+      class = class(.x),
+      max_char = max(nchar(.x, keepNA = FALSE)),
+      missing = sum(is.na(.x))
+    ), .id ="col_name"
+  )
+
+summary_df
+```
+
+And because it's a dataframe, you can use a package like `kableExtra` to format it for reports.
+```{r, message = FALSE}
+library(kableExtra)
+
+summary_df %>%
+  kableExtra::kbl() %>%
+  kableExtra::kable_styling()
+```
+
+
+# Fitting several linear models by group with `purrr` - Anna Quaglieri
+
+For the example I am going to use the `flights` dataset from the R package `nycflights13`. I am going to fit linear model that tries to explain the `arr_time` as a function of `dep_time` and `arr_delay`.
+
+```{r}
+library(nycflights13)
+library(purrr)
+
+flights %>%
+  dplyr::select(arr_time, dep_time, arr_delay, carrier) %>%
+  head()
+```
+
+
+To fit the model to the whole dataset we would use the following code:
+
+```{r}
+summary(lm(arr_time ~ dep_time + arr_delay, data = flights))
+```
+
+What if we wanted to fit separate models by `carrier`?
+
+```{r}
+models <- flights %>%
+  dplyr::select(arr_time, dep_time, arr_delay, carrier) %>%
+  tidyr::nest(-carrier) %>%
+  dplyr::mutate(fit = purrr::map(data, ~ lm(arr_time ~ dep_time + arr_delay, data = .))) %>%
+  dplyr::mutate(results_fit = purrr::map(fit, function(f) confint(f))) 
+models
+```
+
+```{r}
+expand_models <- models %>%
+  tidyr::unnest(results_fit, .drop=TRUE) 
+expand_models
+```
+
+```{r fit-column}
+expand_models$fit[1]
+```
+
+
+# Column-wise operations with `mutate`, `across` and `case_when` - Anna Quaglieri
+
+I found the method below really useful to recode the levels of one or several columns! 
+
+```{r}
+library(dplyr)
+
+test_data <- data.frame(area = rep(c("North", "Sud", "East", "West"),times = c(2,3,4,1)),
+                        quality_before = c("High","Low",
+                                    "High","Low","Medium",
+                                    "Medium","Low","High","High",
+                                    "Low"),
+                        quality_after = c("High","High",
+                                    "High","Medium","Medium",
+                                    "Low","Low","High","High",
+                                    "Low"))
+
+test_data %>%
+  mutate(across(.cols = c(quality_before, quality_after),
+            ~ case_when(
+              . == "Low" ~ 0,
+              . == "Medium" ~ 1,
+              . == "High" ~ 2
+            )
+          )
+  )
+         
+```
+
+
+Strongly suggest to have a look at other functions and applications to perform column-wise operations https://cran.r-project.org/web/packages/dplyr/vignettes/colwise.html.
+
+
+# Basic but Useful R Tips by Song
+
+## Before we start
+
+```{r}
+sessionInfo()
+```
+
+
+## Data Exploration
+
+I code in **tidyverse** universe plus **tidylog** to output all message corresponding to changes made to vector, dataframe, tibble, etc. Please find tidylog package @ <https://github.com/elbersb/tidylog>.
+
+- An initial step is often to preview a dataset. An alternative to summary is describe in **Hmisc** package. The benefits will be it counts number of NAs as summary does, but it also show a frequency table for factor/character.
+
+
+```{r, message=FALSE}
+library(tidyverse)
+
+# colnames(iris)
+# summary(iris)
+# str(iris)
+
+library(Hmisc)
+
+iris$Species %>% describe
+```
+
+- **tidylog** reduces significant code verification and avoid many errors for me. It warns you when NA is generated due to situation not considered. 
+
+```{r}
+library(tidylog, warn.conflicts = FALSE, quietly = FALSE)
+
+new_dt <- iris %>% 
+  filter(Sepal.Length >= 4.6) %>% 
+  mutate(new_name = case_when(
+    Species == "versicolor" ~ "V",
+    Species == "setosa" ~ "S"))
+```
+
+- Compare with revised code: no new NA was generated after the mutation.
+
+
+```{r}
+library(tidylog, warn.conflicts = FALSE, quietly = FALSE)
+
+new_dt <- iris %>% 
+  filter(Sepal.Length >= 4.6) %>% 
+  mutate(new_name = case_when(
+    Species == "versicolor" ~ "Versicolor",
+    Species == "setosa" ~ "Setosa",
+    TRUE ~ "Virginica"))
+```
+
+
+
+## Data Preparation
+
+Use iris dataframe as an example.
+
+- **relocate** also support **.after**, and combine use with **where**.
+
+```{r}
+dt <- head(iris,5)
+
+# dt %>% select("Species", everything(.))
+dt %>% relocate("Species", .before = "Sepal.Length")
+# dt %>% relocate(where(is.numeric), .after = where(is.factor))
+```
+
+- Similar concept can be applied to a vector through **SOfun** package. I found this useful when adjusting factor levels. Of course, **fct_reorder** and **fct_relevel** are useful in different situations.
+
+```{r}
+library(devtools)
+# install_github("mrdwab/SOfun", force=TRUE)
+library(SOfun)
+v <- letters[1:7]
+v %>% moveMe(., "a last; b, e, g before d; c first; g after b")
+
+```
+
+
+- Another high frequency task is to manage NAs. This is way to spot hidden NAs.
+
+```{r}
+hidden_na_dt <- data.frame(
+  "student" = rep(c("A", "B", "C"),2),
+  "assignment" = rep(c("A1", "A2"),3),
+  "mark" = c(NA, runif(n = 5, min = 45, max = 100))
+) %>% 
+  filter(!is.na(mark))
+
+hidden_na_dt
+```
+
+- apply **complete** from **dplyr** package to fill 0 in missing mark from assignment 1 for student A. If there is more combinations, multiple items can be nesting in the **complete** argument.
+
+```{r}
+hidden_na_dt  %>% 
+  complete(student, nesting(assignment), fill = list(mark = 0))
+```
+
+## Data Visualisation
+
+I believe **ggplot2** / **plotly** is relative popular in practice. I also recommend **highercharter** to visualize timeseries data and/or **visNetwork** / **igraph** / **ggraph** to visualize networks. My focus today is labeling inside a chart, so that I will use **ggplot2** to demonstrate.
+
+- Randomly picked a few countries by max number of population of that country to show potential difference when treating labeling.
+
+```{r, message=FALSE}
+plt_original <- population %>% 
+  filter(country %in% c("India", "United States of America", "Viet Nam",
+                        "Lao People's Democratic Republic")) %>% 
+  ggplot(aes(x = year, y = population, group = country, color = country))+
+  geom_line()
+
+plt_original
+```
+
+
+### Functions that I used to improve numeric formatting
+
+The purpose of having customized functions is to improve readability and reduce cognitive load for digesting information provided by visualization.
+
+- The function I grabbed from stackoverflow and made two adaptations: (1) allow the function to accept negative inputs and (2) expand to recognize trillions. 
+
+```{r, message=FALSE, warning=FALSE}
+si_num <- function (x) {
+  
+  if (!is.na(x)) {
+    
+    if (x < 0){ 
+      sign <-  "-"
+      x <- abs(x)
+    }else{
+      sign <-  ""
+      x <- x
+    }
+    
+    if (x >= 1e12) { 
+      chrs <- strsplit(format(x, scientific=12), split="")[[1]];
+      len <- chrs[seq(1,length(chrs)-12)] %>% length();
+      rem <- chrs[seq(1,length(chrs)-11)];
+      rem <- append(rem, ".", after = len) %>% append("T");
+    }
+        
+    if (x >= 1e9) { 
+      chrs <- strsplit(format(x, scientific=12), split="")[[1]];
+      len <- chrs[seq(1,length(chrs)-9)] %>% length();
+      rem <- chrs[seq(1,length(chrs)-8)];
+      rem <- append(rem, ".", after = len) %>% append("B");
+    }
+    
+    
+    else if (x >= 1e6) { 
+      chrs <- strsplit(format(x, scientific=12), split="")[[1]];
+      len <- chrs[seq(1,length(chrs)-6)] %>% length();
+      rem <- chrs[seq(1,length(chrs)-5)]
+      rem <- append(rem, ".", after = len) %>% append("M");
+    }
+    
+    else if (x >= 1e3) { 
+      chrs <- strsplit(format(x, scientific=12), split="")[[1]];
+      len <- chrs[seq(1,length(chrs)-3)] %>% length();
+      rem <- chrs[seq(1,length(chrs)-2)];
+      rem <- append(rem, ".", after = len) %>% append("K");
+    }
+    
+    else {
+      return(x);
+    }
+    
+    return(str_c(sign, paste(rem, sep="", collapse=""), sep = ""));
+  }
+  else return(NA);
+} 
+
+si_vec <- function(x) {
+  sapply(x, FUN=si_num);
+}
+```
+
+
+- Modifications include: (1) change graph title and axis titles and format, (2) change a theme: minimalist design,  (3) remove legend and add text labels to each line.
+- Of course, there are more things: change color pallet defined for country, graph size,...
+
+```{r, fig.height=5, fig.width=10,  message=FALSE, warning=FALSE}
+library(hrbrthemes)
+library(scales)
+library(ggrepel)
+library(cowplot)
+
+
+year_series <- unique(population$year)
+reminder <- (max(year_series) - min(year_series)) %% 4
+new_breaks <- seq(from = min(year_series) + reminder, to = max(year_series), by = 4) 
+
+df <- population %>% 
+  filter(country %in% c("India", "United States of America", "Viet Nam",
+                        "Lao People's Democratic Republic")) 
+df_end <- df %>% 
+  group_by(country) %>% 
+  filter(year == max(year)) %>% 
+  ungroup()
+
+plt_adjust <- df %>% 
+  ggplot(aes(x = year, y = population, group = country, color = country))+
+  geom_line()+
+  geom_point()+
+  geom_text_repel(
+    data = df_end,
+    aes(label = str_wrap(country,25)),
+    nudge_x = 1,
+    direction = "y",## nudge vertically
+    size = 3,
+    hjust = 0, ### left aligned
+    segment.size = 0.3, ### from here is about the line to connect the data point and text
+    min.segment.length = 0,
+    segment.color = "grey60") + 
+  theme_ipsum() +
+  theme(legend.position = "none") +
+  scale_y_continuous(labels = si_vec)+
+  scale_x_continuous(breaks = new_breaks, limits = c(NA, 2020))+
+  labs(x = "Year", y = "Population", title = "Population Growth between 1995 and 2013")
+
+
+plt_original
+plt_adjust
+```
+
+- Or, put it into **plotly**, the default hover over message often does not satisfy users, more professional format is recommended to be used in hover over text.
+
+```{r, message=FALSE, warning=FALSE}
+library(plotly)
+
+plt_plotly <- df %>% 
+  mutate(text = str_c("Country: ", country, "\n",
+                      "Year: ", year, "\n",
+                      "Population: ", si_vec(population))) %>% 
+  ggplot(aes(x = year, y = population, group = country, color = country, text = text))+
+  geom_line()+
+  geom_point()+
+  theme_ipsum() +
+  theme(legend.position = "none") +
+  scale_y_continuous(labels = si_vec)+
+  scale_x_continuous(breaks = new_breaks)+
+  labs(x = "Year", y = "Population", title = "Population Growth between 1995 and 2013")
+
+
+
+ggplotly({plt_plotly}, tooltip = "text")
+```
+
+### At the end
+
+To be continue, I have coded many interactive plots in shinyapps, and some can be found from <https://coffeeandplot.com/apps/>. This is a relatively new website we created couples of month ago. Get in touch if you have any suggestions. Please find me @ <https://www.linkedin.com/in/ytsong/>.
+
+
+# Render an RMarkdown report - Sehrish Kanwal
+
+This section describes how to render an RMarkdown report within a simple R conda environment on a Command Line Interface (cluster or linux environment). This could be achieved in two possible ways:
+
+*  Creating/activating a conda environment and installing packages on commandline
+*  Using an `environment.yml` file that documents the package dependencies
+
+Both work but the second way is the recommended one, which will be described below.
+
+1. Create an `environment.yml` file, that looks something like
+
+	```
+	#name of the conda environment
+	name: HowRYou
+		
+	#the paths that conda takes a look for packages. Avoid using anaconda channel as we have
+	#experienced issues using it 
+	channels:
+		- conda-forge
+		- bioconda
+		- defaults
+		
+	#install following packages in the conda environment
+	#change according to the packages you are using in your RMardown file. 
+	#The first three are required (are R essentail). You can also change the versions to
+	# meet the requirements of your analysis 
+	dependencies:
+		- r-base=3.4.1
+		- pandoc=1.19
+		- r-rmarkdown=1.6
+		- r-here
+	```
+
+2. Create a conda environment (in this case `HowRYou` is the conda environment name specified in the `environment.yml` file. `-p` flag should point to your miniconda installation path. To find how to install conda, check [this](https://docs.conda.io/projects/conda/en/latest/user-guide/install/) 
+
+	```
+	conda env create -p /path/to/miniconda/envs/HowRYou --file environment.yml
+	```
+
+3. Activate this conda environment
+
+	```
+	conda activate HowRYou
+	```
+	
+4. Run the RMarkdown file
+
+	```
+	Rscript -e "rmarkdown::render('HowRYou.Rmd')"
+	```
+	
+	To pass arguments to the Rmd script (in this case two arguments - an input directory location and name of the input vcf file)
+	
+	```
+	Rscript -e "rmarkdown::render('HowRYou.Rmd', params = list(directory = './data', file = 'dummy.txt'))"
+	``` 
+	
+5. An [example](https://github.com/skanwal/Play/blob/master/RLadiesMelb/HowRYou.Rmd) of a rendered script used in the above step # 4
+
+## Advantages:
+
+- Reproducibility - ability to perform the analysis multiple times
+- Portability - being able to move code from one machine or platform to another
+- Flexibility - change easily in response to different user and system requirements 
+
+
+# Pathwork - Shazia Rubental
+
+```{r}
+# install.packages(c("tidyverse", "patchwork, palmerpenguins", "devtools"))
+# devtools::install_github("bahlolab/ggwehi")
+library(tidyverse)
+library(patchwork)
+# library(ggwehi)
+library(palmerpenguins)
+```
+
+
+```{r}
+plot_1 <- penguins %>%
+  ggplot(aes(x = flipper_length_mm, y = body_mass_g, color = species)) +
+    geom_point() +
+   # scale_color_wehi() +
+    labs(x = "Flipper length (mm)",
+         y = "Body mass (g)",
+         color = "Penguin species") +
+    theme_minimal()
+```
+
+```{r}
+plot_2 <- penguins %>% 
+  ggplot(aes(x = flipper_length_mm, fill = species)) +
+    geom_histogram(alpha = 0.5, position = "identity") +
+   # scale_fill_wehi() +
+    labs(x = "Flipper length (mm)",
+         y = "Frequency",
+         fill = "Penguin species") +
+    theme_minimal()
+```
+
+```{r}
+plot_1 + plot_2 + # plot them side-by-side
+  plot_layout(guides = "collect") + # this "collects" the legends to the right of the plot
+  plot_annotation(tag_levels = "a", tag_suffix = ")") # this adds panel labels
+```
+
+
+```{r}
+plot_1 / plot_2 + # plot them one over the other
+  plot_layout(guides = "collect") + # this "collects" the legends to the right of the plot
+  plot_annotation(tag_levels = "a", tag_suffix = ")") # this adds panel labels
+```
+
+
+# How to Generate Word Clouds in R (The simplest way) - Zeinab Manzari
+
+```{r}
+# install.packages(c("wordcloud","RColorBrewer))
+library(wordcloud) #wordcloud for generating word cloud images
+library(RColorBrewer) #RColorBrewer for color palettes
+```
+
+```{r}
+words <- c("RLadies", "Rmarkdown", "tips", "tricks", "script", "rmd", "console", "packages", "share", "4thanniversary", "celebrate", 
+           "RSoftware", "Australia", "Melbourne", "Girls", "Learn","Teach", "Data Structure", "Algorithm", "Visualisation", 
+           "Code", "Data", "ggplot2", "Zoom", "Help", "Text", "RStudio", "programing", "questions", "answers", "Plot", "happy")
+
+freqs <- c(980, 900, 498, 811, 800, 654, 489, 90, 254, 500, 600, 200, 488, 400, 140, 250, 357, 789, 147, 120, 590, 741, 100, 788, 812, 693, 410, 753, 95, 80, 594, 644)
+```
+
+```{r}
+set.seed(3)
+
+wordcloud(words = words,freqs = freqs, scale=c(4,.4), max.words = 1000, random.order=TRUE, random.color=TRUE, colors = brewer.pal(8, "Accent"))
+```
+
+
+# Insert a time-stamp in RStudio - Adele Barughase
+
+In a code chunk or in an R script, insert a timestamp with `ts` + `shift` + `tab`.
+
+First write `ts`:
+
+```{r}
+ts
+```
+
+Then press `shift` + `tab`:
+
+```{r}
+# Wed Nov 11 10:42:54 2020 ------------------------------
+
+```
+
+
+
