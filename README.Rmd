@@ -1,0 +1,27 @@
+---
+title: "How R you? - R-Ladies Melbourne code and tips!"
+date: "16/11/2020"
+output:
+  github_document:
+    toc: yes
+    toc_depth: 2
+always_allow_html: yes
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message=FALSE,
+                      warning=FALSE,
+                      fig.width = 5,
+                      fig.height = 5,
+                      fig.align = 'center')
+
+```
+
+
+
+Organised by [Anna Quaglieri](https://github.com/annaquaglieri16), [Sehrish Kanwal](https://github.com/skanwal) and [Shazia Rubental](www.shaziaruybal.com).
+
+
+Go to [How R you - R-Ladies Melbourne Tips website]().
