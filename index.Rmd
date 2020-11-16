@@ -105,7 +105,8 @@ What if we wanted to fit separate models by `carrier`?
 ```{r}
 models <- flights %>%
   dplyr::select(arr_time, dep_time, arr_delay, carrier) %>%
-  tidyr::nest(-carrier) %>%
+  dplyr::group_by(carrier) %>%
+  tidyr::nest() %>%
   dplyr::mutate(fit = purrr::map(data, ~ lm(arr_time ~ dep_time + arr_delay, data = .))) %>%
   dplyr::mutate(results_fit = purrr::map(fit, function(f) confint(f))) 
 models
