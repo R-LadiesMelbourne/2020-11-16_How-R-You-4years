@@ -550,13 +550,13 @@ wordcloud(words = words,freqs = freqs, scale=c(4,.4), max.words = 1000, random.o
 ```
 
 
-# Insert a time-stamp in RStudio - **[Adele Barughare](https://github.com/aabarug)**
+# Insert a time-stamp in RStudio - **[Adele Barugahare](https://github.com/aabarug)**
 
 In a code chunk or in an R script, insert a timestamp with `ts` + `shift` + `tab`.
 
 First write `ts`:
 
-```{r}
+```{r, eval=FALSE}
 ts
 ```
 
